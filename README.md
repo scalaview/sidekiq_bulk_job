@@ -42,3 +42,13 @@ The gem is available as open source under the terms of the [MIT License](https:/
 ## Code of Conduct
 
 Everyone interacting in the SidekiqBulkJob project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/sidekiq_bulk_job/blob/master/CODE_OF_CONDUCT.md).
+
+
+###
+```ruby
+  process_fail = lambda do |job_class_name, args, exception|
+    # do somethine
+    # send email
+  end
+  SidekiqBulkJob.config redis: , logger: Rails.logger, process_fail: process_fail, queue: :default, batch_size: 3000, prefix: "SidekiqBulkJob"
+```
