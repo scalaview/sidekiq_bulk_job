@@ -11,18 +11,15 @@ module SidekiqBulkJob
 
       # 批量异步执行
       def batch_perform_async(*args)
-        SidekiqBulkJob.perform_async(self, *args)
-      end
-
-      # 批量确定时间异步执行
-      def batch_perform_at(*args)
-        SidekiqBulkJob.perform_at(self, *args)
+        SidekiqBulkJob.set(sidekiq_options).perform_async(self, *args)
       end
 
       # 批量延后一段时间执行
-      def batch_perform_in(*args)
-        SidekiqBulkJob.perform_in(self, *args)
+      def batch_perform_in(interval, *args)
+        SidekiqBulkJob.set(sidekiq_options).perform_in(interval, self, *args)
       end
+      alias_method :batch_perform_at, :batch_perform_in
+
     end
 
 

@@ -3,7 +3,7 @@ require "sidekiq"
 module SidekiqBulkJob
   class BulkJob
     include Sidekiq::Worker
-    sidekiq_options queue: SidekiqBulkJob.queue
+    sidekiq_options queue: :default
 
     def perform(job_class_name, args_array)
       job = job_class_name.constantize

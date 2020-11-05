@@ -8,5 +8,7 @@
 /tmp/
 lib/.DS_Store
 
+sidekiq_bulk_job-*.gem
+
 # rspec failure tracking
 .rspec_status

@@ -50,5 +50,6 @@ Everyone interacting in the SidekiqBulkJob project's codebases, issue trackers, 
     # do somethine
     # send email
   end
-  SidekiqBulkJob.config redis: , logger: Rails.logger, process_fail: process_fail, queue: :default, batch_size: 3000, prefix: "SidekiqBulkJob"
+  client = Redis.new
+  SidekiqBulkJob.config redis: client, logger: Rails.logger, process_fail: process_fail, queue: :default, batch_size: 3000, prefix: "SidekiqBulkJob"
 ```
