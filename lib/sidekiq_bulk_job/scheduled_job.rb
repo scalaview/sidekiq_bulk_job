@@ -1,12 +1,15 @@
 require "sidekiq"
 
+require "sidekiq_bulk_job/job_retry"
+require "sidekiq_bulk_job/utils"
+
 module SidekiqBulkJob
   class ScheduledJob
     include Sidekiq::Worker
     sidekiq_options queue: :default, retry: false
 
     def perform(job_class_name, args_redis_key)
-      job = job_class_name.constantize
+      job = Utils.constantize(job_class_name)
       args_array = SidekiqBulkJob.flush args_redis_key
       args_array.each do |_args|
         begin

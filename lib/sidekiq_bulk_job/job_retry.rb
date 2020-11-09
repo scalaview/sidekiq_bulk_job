@@ -1,6 +1,7 @@
 require "sidekiq"
 
 require "sidekiq_bulk_job/utils"
+require 'sidekiq/job_retry'
 
 module SidekiqBulkJob
   class JobRetry

@@ -1,6 +1,7 @@
 require "sidekiq"
 
 require "sidekiq_bulk_job/job_retry"
+require "sidekiq_bulk_job/utils"
 
 module SidekiqBulkJob
   class BulkJob
@@ -8,7 +9,7 @@ module SidekiqBulkJob
     sidekiq_options queue: :default, retry: false
 
     def perform(job_class_name, args_array)
-      job = job_class_name.constantize
+      job = Utils.constantize(job_class_name)
       args_array.each do |_args|
         begin
           args = JSON.parse _args

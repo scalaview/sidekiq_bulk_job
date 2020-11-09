@@ -347,4 +347,11 @@ RSpec.describe SidekiqBulkJob do
   end
 
 
+  it "push the failed job to the dead sidekiq queue" do
+    Sidekiq::DeadSet.new.clear
+    SidekiqBulkJob::BulkJob.new.perform(TestJob.to_s, [[1]])
+    expect(Sidekiq::DeadSet.new.size).to eq 1
+  end
+
+
 end
