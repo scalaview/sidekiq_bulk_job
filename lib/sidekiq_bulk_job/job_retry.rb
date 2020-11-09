@@ -14,7 +14,7 @@ module SidekiqBulkJob
     end
 
     def push(options={})
-      opts = default_setting.merge(options)
+      opts = job_options(options)
       queue_as = queue(@klass) || :default
       begin
         @handler.local(SidekiqBulkJob::BulkJob, opts, queue_as) do
@@ -26,9 +26,14 @@ module SidekiqBulkJob
 
     protected
 
-    def default_setting
+    def job_options(options={})
       # 0 retry: no retry and dead queue
-      { 'class' => @klass.to_s, 'args' => @args, 'retry' => 0 }
+      opts = { 'class' => @klass.to_s, 'args' => @args, 'retry' => 0 }.merge(options)
+      if Sidekiq::VERSION >= "6.0.2"
+        Sidekiq.dump_json(opts)
+      else
+        opts
+      end
     end
 
     def queue(woker)
