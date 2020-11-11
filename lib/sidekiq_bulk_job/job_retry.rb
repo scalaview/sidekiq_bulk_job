@@ -37,8 +37,8 @@ module SidekiqBulkJob
     end
 
     def queue(woker)
-      if !woker.sidekiq_options.nil? && !woker.sidekiq_options.empty?
-        sidekiq_options = Utils.symbolize_keys(woker.sidekiq_options)
+      if woker.included_modules.include?(Sidekiq::Worker) && !woker.sidekiq_options.nil? && !woker.sidekiq_options.empty?
+        sidekiq_options = SidekiqBulkJob::Utils.symbolize_keys(woker.sidekiq_options)
         if !sidekiq_options[:queue].nil?
           sidekiq_options[:queue]
         end

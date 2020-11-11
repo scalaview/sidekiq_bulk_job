@@ -23,7 +23,7 @@ module SidekiqBulkJob
     end
 
     def perform_async(job_class, *args)
-      options = Utils.symbolize_keys(@opts)
+      options = SidekiqBulkJob::Utils.symbolize_keys(@opts)
       if options[:at].nil? && options[:in].nil?
         payload = {
             job_class_name: job_class.to_s,
@@ -45,7 +45,7 @@ module SidekiqBulkJob
 
       # Optimization to enqueue something now that is scheduled to go out now or in the past
       if ts > now.to_f
-        options = Utils.symbolize_keys(@opts)
+        options = SidekiqBulkJob::Utils.symbolize_keys(@opts)
         payload = {
           job_class_name: job_class.to_s,
           at: ts,

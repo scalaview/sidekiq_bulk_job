@@ -18,6 +18,7 @@ RSpec.describe SidekiqBulkJob do
     scheduled.clear
     test_running.clear
     default_running.clear
+    dead_set.clear
     redis.del SidekiqBulkJob.generate_key("TestJob")
   end
 
@@ -37,6 +38,10 @@ RSpec.describe SidekiqBulkJob do
     @default_running ||= Sidekiq::Queue.new("default")
   }
 
+  let(:dead_set) {
+    @dead_set ||= Sidekiq::DeadSet.new
+  }
+
   class TestJob
     include Sidekiq::Worker
     sidekiq_options queue: :default
@@ -44,6 +49,17 @@ RSpec.describe SidekiqBulkJob do
     def perform(*args)
       puts args
     end
+  end
+
+  class TestMethod
+
+    class << self
+      def call(key, value)
+        redis = Redis.new
+        redis.set key, value
+      end
+    end
+
   end
 
   it "run once perform_async" do
@@ -348,10 +364,14 @@ RSpec.describe SidekiqBulkJob do
 
 
   it "push the failed job to the dead sidekiq queue" do
-    Sidekiq::DeadSet.new.clear
     SidekiqBulkJob::BulkJob.new.perform(TestJob.to_s, [[1]])
-    expect(Sidekiq::DeadSet.new.size).to eq 1
+    expect(dead_set.size).to eq 1
   end
 
+  it "run sidekiq bulk job and scheduled job use class method directly" do
+    SidekiqBulkJob::BulkJob.new.perform("TestMethod.call", [ ["test001", 3].to_json])
+    expect(dead_set.size).to eq 0
+    expect(redis.get("test001")).to eq "3"
+  end
 
 end
