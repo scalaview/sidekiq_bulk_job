@@ -64,18 +64,37 @@ module SidekiqBulkJob
 
   class << self
 
-    attr_accessor :prefix, :redis, :queue, :batch_size, :logger, :process_fail
+    attr_accessor :prefix, :redis, :queue, :scheduled_delay, :async_delay, :batch_size, :logger, :process_fail
 
-    def config(redis: , logger: , process_fail: , queue: :default, batch_size: 3000, prefix: "SidekiqBulkJob")
+    def config(redis: , logger: , process_fail: , async_delay: 60, scheduled_delay: 10, queue: :default, batch_size: 3000, prefix: "SidekiqBulkJob")
       if redis.nil?
         raise ArgumentError.new("redis not allow nil")
       end
+      if logger.nil?
+        raise ArgumentError.new("logger not allow nil")
+      end
+      if process_fail.nil?
+        raise ArgumentError.new("process_fail not allow nil")
+      end
+      if async_delay.to_f < 2
+        raise ArgumentError.new("async_delay not allow less than 2 seconds.")
+      elsif async_delay.to_f > 5 * 60
+        raise ArgumentError.new("async_delay not allow greater than 5 minutes.")
+      end
+      if scheduled_delay.to_f < 2
+        raise ArgumentError.new("scheduled_delay not allow less than 2 seconds.")
+      elsif scheduled_delay.to_f > 30
+        raise ArgumentError.new("scheduled_delay not allow greater than 2 seconds.")
+      end
+
       self.redis = redis
       self.queue = queue
       self.batch_size = batch_size
       self.prefix = prefix
       self.logger = logger
       self.process_fail = process_fail
+      self.async_delay = async_delay.to_f
+      self.scheduled_delay = scheduled_delay.to_f
     end
 
     def set(options)
@@ -121,7 +140,7 @@ module SidekiqBulkJob
         args_redis_key = nil
         target = scheduled_set.find do |job|
           if job.klass == SidekiqBulkJob::ScheduledJob.to_s &&
-                job.at.to_i.between?((at - 5).to_i, (at + 30).to_i) # 允许30秒延迟
+                job.at.to_i.between?((at - self.scheduled_delay).to_i, (at + self.scheduled_delay).to_i) # 允许30秒延迟
               _job_class_name, args_redis_key = job.args
               _job_class_name == job_class_name
            end
@@ -197,7 +216,7 @@ module SidekiqBulkJob
       if !_monitor.nil?
         # TODO debug log
       else
-        SidekiqBulkJob::Monitor.client_push("queue" => queue, "at" => (time_now + 60).to_f, "class" => SidekiqBulkJob::Monitor, "args" => [time_now.to_f, job_class_name])
+        SidekiqBulkJob::Monitor.client_push("queue" => queue, "at" => (time_now + self.async_delay).to_f, "class" => SidekiqBulkJob::Monitor, "args" => [time_now.to_f, job_class_name])
       end
     end
 

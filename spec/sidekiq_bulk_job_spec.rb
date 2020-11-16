@@ -4,14 +4,15 @@ require 'pry'
 RSpec.describe SidekiqBulkJob do
 
   BATCH_SIZE = 30
+  ASYNC_DELAY = 60
+  SCHEDULED_DELAY = 5
 
   before :all do
     process_fail = lambda do |job_class_name, args, exception|
       # do somethine
       # send email
     end
-    SidekiqBulkJob.config redis: Redis.new, logger: Logger.new(STDOUT), process_fail: process_fail, queue: :test, batch_size: BATCH_SIZE, prefix: "SidekiqBulkJob"
-
+    SidekiqBulkJob.config redis: Redis.new, logger: Logger.new(STDOUT), process_fail: process_fail, async_delay: ASYNC_DELAY, scheduled_delay: SCHEDULED_DELAY, queue: :test, batch_size: BATCH_SIZE, prefix: "SidekiqBulkJob"
   end
 
   before :each do
@@ -75,7 +76,7 @@ RSpec.describe SidekiqBulkJob do
     end
 
     expect(monitor.nil?).to be false
-    expect(monitor.at.between?(Time.now - 10, Time.now + 60)).to be true
+    expect(monitor.at.between?(Time.now - 1, Time.now + ASYNC_DELAY)).to be true
     expect(monitor.queue).to eq "test"
     expect(monitor.args.size).to eq 2
     expect(monitor.args[1]).to eq "TestJob"
@@ -111,7 +112,7 @@ RSpec.describe SidekiqBulkJob do
       job.klass == 'SidekiqBulkJob::Monitor'
     end
     expect(monitor.nil?).to be false
-    expect(monitor.at.between?(now - 10, now + 61)).to be true
+    expect(monitor.at.between?(now - 1, now + ASYNC_DELAY + 1)).to be true
     # use same queue define in TestJob
     expect(monitor.queue).to eq "default"
     expect(monitor.args.size).to eq 2
@@ -181,7 +182,7 @@ RSpec.describe SidekiqBulkJob do
       job.klass == 'SidekiqBulkJob::ScheduledJob'
     end
     expect(scheduled_job.nil?).to be false
-    expect(scheduled_job.at.between?(now - 5, now + 65)).to be true
+    expect(scheduled_job.at.between?(now, now + 61)).to be true
     expect(scheduled_job.queue).to eq "test"
     expect(scheduled_job.args.size).to eq 2
     expect(scheduled_job.args[0]).to eq "TestJob"
@@ -198,15 +199,15 @@ RSpec.describe SidekiqBulkJob do
 
     expect(scheduled.size).to eq 1
 
-    SidekiqBulkJob.perform_in(90, TestJob, 12)
+    SidekiqBulkJob.perform_in(1 * 60 + SCHEDULED_DELAY + 1, TestJob, 12)
     expect(scheduled.size).to eq 2
 
     first_job = scheduled.find do |job|
-      job.klass == 'SidekiqBulkJob::ScheduledJob' && job.at.between?(now - 1, now + 61)
+      job.klass == 'SidekiqBulkJob::ScheduledJob' && job.at.between?(now, now + 61)
     end
 
     second_job = scheduled.find do |job|
-      job.klass == 'SidekiqBulkJob::ScheduledJob' && job.at.between?(now + 60, now + 91)
+      job.klass == 'SidekiqBulkJob::ScheduledJob' && job.at.between?(now + 59, now + 62 + SCHEDULED_DELAY)
     end
 
     expect(first_job.nil?).to be false
@@ -266,7 +267,7 @@ RSpec.describe SidekiqBulkJob do
       job.klass == 'SidekiqBulkJob::ScheduledJob'
     end
     expect(scheduled_job.nil?).to be false
-    expect(scheduled_job.at.between?(now - 5, now + 65)).to be true
+    expect(scheduled_job.at.between?(now - 1, now + 61)).to be true
     expect(scheduled_job.queue).to eq "default"
     expect(scheduled_job.args.size).to eq 2
     expect(scheduled_job.args[0]).to eq "TestJob"
