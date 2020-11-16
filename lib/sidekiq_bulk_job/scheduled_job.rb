@@ -14,7 +14,7 @@ module SidekiqBulkJob
       args_array = SidekiqBulkJob.flush args_redis_key
       args_array.each do |_args|
         begin
-          args = JSON.parse _args
+          args = SidekiqBulkJob::Utils.load _args
           if SidekiqBulkJob::Utils.class_with_method?(job_class_name)
             job.send(method_name, *args)
           else

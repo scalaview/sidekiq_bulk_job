@@ -62,6 +62,10 @@ RSpec.describe SidekiqBulkJob do
 
   end
 
+  def load(args)
+    SidekiqBulkJob::Utils.load(args)
+  end
+
   it "run once perform_async" do
     SidekiqBulkJob.perform_async(TestJob, 10)
 
@@ -78,7 +82,7 @@ RSpec.describe SidekiqBulkJob do
 
     result = SidekiqBulkJob.flush SidekiqBulkJob.generate_key("TestJob")
     expect(result.size).to eq 1
-    expect(result[0]).to eq "[10]"
+    expect(load(result[0])).to eq [10]
   end
 
   it "run #{BATCH_SIZE + 1} time in perform_async" do
@@ -115,7 +119,7 @@ RSpec.describe SidekiqBulkJob do
 
     result = SidekiqBulkJob.flush SidekiqBulkJob.generate_key("TestJob")
     expect(result.size).to eq 1
-    expect(result[0]).to eq "[9,4,10]"
+    expect(load(result[0])).to eq [9,4,10]
   end
 
   it "run #{BATCH_SIZE + 1} time with sidekiq job directly" do
@@ -153,7 +157,7 @@ RSpec.describe SidekiqBulkJob do
 
     result = SidekiqBulkJob.flush scheduled_job.args[1]
     expect(result.size).to eq 1
-    expect(result[0]).to eq "[10]"
+    expect(load(result[0])).to eq [10]
 
   end
 
@@ -184,7 +188,7 @@ RSpec.describe SidekiqBulkJob do
 
     result = SidekiqBulkJob.flush scheduled_job.args[1]
     expect(result.size).to eq 1
-    expect(result[0]).to eq "[10]"
+    expect(load(result[0])).to eq [10]
   end
 
   it "use perform_in after sleep 30 seconds" do
@@ -213,12 +217,12 @@ RSpec.describe SidekiqBulkJob do
 
     result_1 = SidekiqBulkJob.flush first_job.args[1]
     expect(result_1.size).to eq 2
-    expect(result_1[0]).to eq "[10]"
-    expect(result_1[1]).to eq "[11]"
+    expect(load(result_1[0])).to eq [10]
+    expect(load(result_1[1])).to eq [11]
 
     result_2 = SidekiqBulkJob.flush second_job.args[1]
     expect(result_2.size).to eq 1
-    expect(result_2[0]).to eq "[12]"
+    expect(load(result_2[0])).to eq [12]
   end
 
   it "use batch_perform_at in further time" do
@@ -238,7 +242,7 @@ RSpec.describe SidekiqBulkJob do
 
     result = SidekiqBulkJob.flush scheduled_job.args[1]
     expect(result.size).to eq 1
-    expect(result[0]).to eq "[10]"
+    expect(load(result[0])).to eq [10]
   end
 
 
@@ -269,7 +273,7 @@ RSpec.describe SidekiqBulkJob do
 
     result = SidekiqBulkJob.flush scheduled_job.args[1]
     expect(result.size).to eq 1
-    expect(result[0]).to eq "[10]"
+    expect(load(result[0])).to eq [10]
   end
 
 
@@ -299,12 +303,12 @@ RSpec.describe SidekiqBulkJob do
 
     result_1 = SidekiqBulkJob.flush first_job.args[1]
     expect(result_1.size).to eq 2
-    expect(result_1[0]).to eq "[10]"
-    expect(result_1[1]).to eq "[11]"
+    expect(load(result_1[0])).to eq [10]
+    expect(load(result_1[1])).to eq [11]
 
     result_2 = SidekiqBulkJob.flush second_job.args[1]
     expect(result_2.size).to eq 1
-    expect(result_2[0]).to eq "[12]"
+    expect(load(result_2[0])).to eq [12]
   end
 
   it "use setter in batch_perform_async" do
@@ -323,7 +327,7 @@ RSpec.describe SidekiqBulkJob do
 
     result = SidekiqBulkJob.flush SidekiqBulkJob.generate_key("TestJob")
     expect(result.size).to eq 1
-    expect(result[0]).to eq "[9,4,10]"
+    expect(load(result[0])).to eq [9,4,10]
 
   end
 
@@ -341,7 +345,7 @@ RSpec.describe SidekiqBulkJob do
 
     result = SidekiqBulkJob.flush scheduled_job.args[1]
     expect(result.size).to eq 1
-    expect(result[0]).to eq "[9,4,10]"
+    expect(load(result[0])).to eq [9,4,10]
   end
 
   it "use setter set delay in batch_perform_in" do
@@ -359,7 +363,7 @@ RSpec.describe SidekiqBulkJob do
 
     result = SidekiqBulkJob.flush scheduled_job.args[1]
     expect(result.size).to eq 1
-    expect(result[0]).to eq "[4,10]"
+    expect(load(result[0])).to eq [4,10]
   end
 
 
@@ -372,6 +376,15 @@ RSpec.describe SidekiqBulkJob do
     SidekiqBulkJob::BulkJob.new.perform("TestMethod.call", [ ["test001", 3].to_json])
     expect(dead_set.size).to eq 0
     expect(redis.get("test001")).to eq "3"
+  end
+
+  it "dump and load Hash with symbolize" do
+    marshalled = SidekiqBulkJob::Utils.dump({jjid: "123", "klass" => "SomeWorker"})
+    obj = SidekiqBulkJob::Utils.load marshalled
+    expect(obj[:jjid]).to eq '123'
+    expect(obj['jjid']).to eq nil
+    expect(obj['klass']).to eq 'SomeWorker'
+
   end
 
 end

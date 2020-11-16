@@ -113,7 +113,7 @@ module SidekiqBulkJob
     def process(job_class_name: , at: nil, perfrom_args: [], queue: self.queue)
       if at.nil?
         key = generate_key(job_class_name)
-        client.lpush key, perfrom_args.to_json
+        client.lpush key, SidekiqBulkJob::Utils.dump(perfrom_args)
         bulk_run(job_class_name, key, queue: queue) if need_flush?(key)
         monitor(job_class_name, queue: queue)
       else
@@ -128,11 +128,11 @@ module SidekiqBulkJob
         end
         if !target.nil? && !args_redis_key.nil? && !args_redis_key.empty?
           # 往现有的job参数set里增加参数
-          client.lpush args_redis_key, perfrom_args.to_json
+          client.lpush args_redis_key, SidekiqBulkJob::Utils.dump(perfrom_args)
         else
           # 新增加一个
           args_redis_key = SecureRandom.hex
-          client.lpush args_redis_key, perfrom_args.to_json
+          client.lpush args_redis_key, SidekiqBulkJob::Utils.dump(perfrom_args)
           SidekiqBulkJob::ScheduledJob.client_push("queue" => queue, "class" => SidekiqBulkJob::ScheduledJob, "at" => at, "args" => [job_class_name, args_redis_key])
         end
       end

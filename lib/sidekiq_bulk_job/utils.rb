@@ -1,3 +1,6 @@
+require 'yaml'
+require "sidekiq/extensions/active_record"
+
 module SidekiqBulkJob
   module Utils
 
@@ -78,6 +81,18 @@ module SidekiqBulkJob
         else
           [klass_name, :perform]
         end
+      end
+
+      def load yaml, legacy_filename = Object.new, filename: nil, fallback: false, symbolize_names: false
+        YAML.load yaml, legacy_filename, filename: filename, fallback: fallback, symbolize_names: symbolize_names
+      end
+
+      def dump o, io = nil, options = {}
+        marshalled = YAML.dump o, io, options
+        if marshalled.size > Sidekiq::Extensions::SIZE_LIMIT
+          SidekiqBulkJob.logger.warn { "job argument is #{marshalled.bytesize} bytes, you should refactor it to reduce the size" }
+        end
+        marshalled
       end
 
     end
