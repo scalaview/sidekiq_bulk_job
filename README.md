@@ -19,8 +19,11 @@ Or install it yourself as:
     $ gem install sidekiq_bulk_job
 
 ## Usage
-###Initialization：
-#####Parameters：
+
+### Initialization：
+
+##### Parameters：
+
 * redis: redis client.
 * logger: log object，default Logger.new(STDOUT).
 * process_fail: a callback when the job fail.
@@ -48,7 +51,9 @@ Or install it yourself as:
 	  // push a job
 	SidekiqBulkJob.perform_async(TestJob, 10)
 ```
-###Usage
+
+### Usage
+
 At first define a TestJob as example
 ```ruby
 # create a sidekiq worker, use default queue
@@ -61,8 +66,11 @@ At first define a TestJob as example
     end
   end
   ```
-  #####Use SidekiqBulkJob async
+  
+##### Use SidekiqBulkJob async
+
   SidekiqBulkJob will collect the same job in to a list, a batch job will create when beyond the ```batch_size``` in  ```async_delay``` amount, and clear the list. The list will continue to collect the job which pushing inside. If reach the```async_delay``` time, the SidekiqBulkJob will also created to finish all job collected.
+  
 ```ruby
 # create a sidekiq worker, use default queue
   class TestJob
@@ -84,13 +92,15 @@ At first define a TestJob as example
   end
 ```
 
-#####Use SidekiqWork batch_perform_async to run async task
+##### Use SidekiqWork batch_perform_async to run async task
+
 ```ruby
 # same as SidekiqBulkJob.perform_async(TestJob, 10)
 TestJob.batch_perform_async(10)
 ```
 
-#####Use SidekiqBulkJob perform_at/perform_in to set scheduled task
+##### Use SidekiqBulkJob perform_at/perform_in to set scheduled task
+
 ```ruby
 # run at 1 minute after with single job
 SidekiqBulkJob.perform_at(1.minutes.after, TestJob, 10)
@@ -98,7 +108,8 @@ SidekiqBulkJob.perform_at(1.minutes.after, TestJob, 10)
 SidekiqBulkJob.perform_in(1 * 60, TestJob, 10)
 ```
 
-#####Use SidekiqWork batch_perform_at/batch_perform_in to set scheduled task
+##### Use SidekiqWork batch_perform_at/batch_perform_in to set scheduled task
+
 ```ruby
 # same as SidekiqBulkJob.perform_at(1.minutes.after, TestJob, 10)
 TestJob.batch_perform_at(1.minutes.after, 10)
@@ -106,7 +117,8 @@ TestJob.batch_perform_at(1.minutes.after, 10)
 TestJob.batch_perform_in(1.minute, 10)
 ```
 
-#####Use setter to set task
+##### Use setter to set task
+
 ```ruby
 # set queue to test and run async
 TestJob.set(queue: :test).batch_perform_async(10)
@@ -118,9 +130,12 @@ TestJob.set(queue: :test, in: 90).batch_perform_async(10)
 TestJob.set(queue: :test, in: 90).batch_perform_in(10, 10)
 ```
 
-##中文
-###初始化：
-#####参数：
+## 中文
+
+### 初始化：
+
+##### 参数：
+
 * redis: redis client
 * logger: 日志对象，默认Logger.new(STDOUT)
 * process_fail: 当job处理失败的通用回调
@@ -148,7 +163,9 @@ TestJob.set(queue: :test, in: 90).batch_perform_in(10, 10)
 	  // push a job
 	SidekiqBulkJob.perform_async(TestJob, 10)
 ```
-###用法
+
+### 用法
+
 设置一个TestJob举例子
 ```ruby
 # create a sidekiq worker, use default queue
@@ -161,7 +178,9 @@ TestJob.set(queue: :test, in: 90).batch_perform_in(10, 10)
     end
   end
   ```
-#####使用SidekiqBulkJob的async接口
+  
+##### 使用SidekiqBulkJob的async接口
+
 SidekiqBulkJob会把同类型的job汇总到一个list中，当```async_delay```时间内超过```batch_size```，会新建一个batch job立刻执行汇总的全部jobs，清空list，清空的list会继续收集后续推入的job；如果在```async_delay```时间内未到达```batch_size```则会在最后一个job推入后等待```async_delay```时间创建一个batch job执行汇总的全部jobs
 ```ruby
 # create a sidekiq worker, use default queue
@@ -184,13 +203,15 @@ SidekiqBulkJob会把同类型的job汇总到一个list中，当```async_delay```
   end
 ```
 
-#####使用SidekiqWork的batch_perform_async接口异步执行任务
+##### 使用SidekiqWork的batch_perform_async接口异步执行任务
+
 ```ruby
 # same as SidekiqBulkJob.perform_async(TestJob, 10)
 TestJob.batch_perform_async(10)
 ```
 
-#####使用SidekiqBulkJob的perform_at/perform_in接口设置定时任务
+##### 使用SidekiqBulkJob的perform_at/perform_in接口设置定时任务
+
 ```ruby
 # run at 1 minute after with single job
 SidekiqBulkJob.perform_at(1.minutes.after, TestJob, 10)
@@ -198,7 +219,8 @@ SidekiqBulkJob.perform_at(1.minutes.after, TestJob, 10)
 SidekiqBulkJob.perform_in(1 * 60, TestJob, 10)
 ```
 
-#####使用SidekiqWork的batch_perform_at/batch_perform_in接口设置定时任务
+##### 使用SidekiqWork的batch_perform_at/batch_perform_in接口设置定时任务
+
 ```ruby
 # same as SidekiqBulkJob.perform_at(1.minutes.after, TestJob, 10)
 TestJob.batch_perform_at(1.minutes.after, 10)
@@ -206,7 +228,8 @@ TestJob.batch_perform_at(1.minutes.after, 10)
 TestJob.batch_perform_in(1.minute, 10)
 ```
 
-#####使用setter设置
+##### 使用setter设置
+
 ```ruby
 # set queue to test and run async
 TestJob.set(queue: :test).batch_perform_async(10)
