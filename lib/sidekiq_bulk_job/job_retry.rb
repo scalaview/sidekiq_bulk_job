@@ -34,6 +34,7 @@ module SidekiqBulkJob
         'class' => SidekiqBulkJob::BulkJob.to_s,
         'args' => @error_handle.args,
         'retry' => true,
+        'jid' => @error_handle.jid,
         'retry_count' => @retry_count.to_i
       }.merge(options)
       if Sidekiq::VERSION >= "6.0.2"
