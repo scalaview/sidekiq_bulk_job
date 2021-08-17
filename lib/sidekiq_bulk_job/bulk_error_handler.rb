@@ -28,7 +28,7 @@ module SidekiqBulkJob
     end
 
     def args
-      errors.map(&:args)
+      [job_class_name, errors.map(&:args)]
     end
 
     def failed?
