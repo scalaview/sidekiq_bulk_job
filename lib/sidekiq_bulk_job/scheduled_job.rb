@@ -21,7 +21,7 @@ module SidekiqBulkJob
             job.new.send(method_name, *args)
           end
         rescue Exception => e
-          SidekiqBulkJob.logger.error("#{job_class_name} Args: #{args}, Error: #{e.full_message}")
+          SidekiqBulkJob.logger.error("#{job_class_name} Args: #{args}, Error: #{e.respond_to?(:full_message) ? e.full_message : e.message}")
           SidekiqBulkJob.fail_callback(job_class_name: job_class_name, args: args, exception: e)
           SidekiqBulkJob::JobRetry.new(job, args, e).push
         end

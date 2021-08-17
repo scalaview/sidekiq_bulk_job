@@ -29,7 +29,7 @@ module SidekiqBulkJob
             job_class_name: job_class.to_s,
             perfrom_args: args,
             queue: options[:queue] || SidekiqBulkJob.queue
-          }.compact
+          }.select { |_, value| !value.nil? }
         SidekiqBulkJob.process payload
       else
         perform_in(options[:at] || options[:in], job_class, *args)
@@ -51,7 +51,7 @@ module SidekiqBulkJob
           at: ts,
           perfrom_args: args,
           queue: options[:queue] || SidekiqBulkJob.queue
-        }.compact
+        }.select { |_, value| !value.nil? }
         SidekiqBulkJob.process payload
       else
         perform_async(job_class, *args)

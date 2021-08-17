@@ -19,7 +19,7 @@ RSpec.describe SidekiqBulkJob do
     scheduled.clear
     test_running.clear
     default_running.clear
-    dead_set.clear
+    retry_set.clear
     redis.del SidekiqBulkJob.generate_key("TestJob")
   end
 
@@ -39,8 +39,8 @@ RSpec.describe SidekiqBulkJob do
     @default_running ||= Sidekiq::Queue.new("default")
   }
 
-  let(:dead_set) {
-    @dead_set ||= Sidekiq::DeadSet.new
+  let(:retry_set) {
+    @retry_set ||= Sidekiq::RetrySet.new
   }
 
   class TestJob
@@ -368,14 +368,21 @@ RSpec.describe SidekiqBulkJob do
   end
 
 
-  it "push the failed job to the dead sidekiq queue" do
-    SidekiqBulkJob::BulkJob.new.perform(TestJob.to_s, [[1]])
-    expect(dead_set.size).to eq 1
+  it "push the failed job to the retry sidekiq queue" do
+    args = [[1]]
+    SidekiqBulkJob::BulkJob.new.perform(TestJob.to_s, args)
+    expect(retry_set.size).to eq 1
+
+    job = retry_set.select do |job|
+      job.klass == SidekiqBulkJob::BulkJob.to_s
+    end.first
+    expect(job.nil?).to eq false
+    expect(job.args).to eq args
   end
 
   it "run sidekiq bulk job and scheduled job use class method directly" do
     SidekiqBulkJob::BulkJob.new.perform("TestMethod.call", [ ["test001", 3].to_json])
-    expect(dead_set.size).to eq 0
+    expect(retry_set.size).to eq 0
     expect(redis.get("test001")).to eq "3"
   end
 
