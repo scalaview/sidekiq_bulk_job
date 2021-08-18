@@ -24,10 +24,10 @@ module SidekiqBulkJob
         rescue Exception => e
           error_handle.add _args, e
           SidekiqBulkJob.logger.error("#{job_class_name} Args: #{args}, Error: #{e.respond_to?(:full_message) ? e.full_message : e.message}")
-          SidekiqBulkJob.fail_callback(job_class_name: job_class_name, args: args, exception: e)
         end
       end
       if error_handle.failed?
+        SidekiqBulkJob.fail_callback(job_class_name: job_class_name, args: error_handle.args, exception: error_handle.raise_error)
         SidekiqBulkJob::JobRetry.new(job, error_handle).push
       else
         error_handle.clear
