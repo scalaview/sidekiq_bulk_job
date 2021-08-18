@@ -1,3 +1,4 @@
+require 'securerandom'
 module SidekiqBulkJob
   class BulkErrorHandler
 
