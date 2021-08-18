@@ -14,7 +14,7 @@ module SidekiqBulkJob
     attr_accessor :job_class_name, :errors, :jid
 
     def initialize(job_class_name, jid)
-      @jid = jid
+      @jid = jid || SecureRandom.hex(12)
       @job_class_name = job_class_name
       @errors = []
     end

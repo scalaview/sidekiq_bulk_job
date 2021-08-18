@@ -378,6 +378,12 @@ RSpec.describe SidekiqBulkJob do
     end.first
     expect(job.nil?).to eq false
     expect(job.args).to eq [TestJob.to_s, args]
+    expect(job.item["retry_count"]).to eq 2
+    retry_set.retry_all
+    job = retry_set.select do |job|
+      job.klass == SidekiqBulkJob::BulkJob.to_s
+    end.first
+    expect(job.nil?).to eq true
   end
 
   it "run sidekiq bulk job and scheduled job use class method directly" do
